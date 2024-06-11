@@ -11,25 +11,23 @@ import Ventas from './schemas/Ventas';
 import Dispositivo from './schemas/Dispositivo'
 import Recordatorio from './schemas/Recordatorio'
 import { exec } from 'child_process';
-
-import {decryptVigenere, encryptVigenere} from './vigenere'
+const bcrypt = require('bcrypt')
+require('dotenv').config()
 
 const app = express()
-const port = 4000
+const port = process.env.SERVER_PORT
 
 app.use(express.json());
 app.use(bodyParser.json())
 app.use(cors());
 
-const mongoURI = "mongodb+srv://agroboost:vCBXlVmKOdb8rO7Y@cluster0.vrxx0za.mongodb.net/AgroBoost"
+const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017"
 
 mongoose.connect(mongoURI).then(() => {
   console.log("Connected Success");
 }).catch((err) => {
   console.log("Error:", err);
 });
-
-const VIGENERE_KEY = "AGROBOOST";
 
 app.post('/login', async (req, res) => {
   const { correo_electronico, contrasena } = req.body;
@@ -40,12 +38,14 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ mensaje: "Credenciales inválidas" });
     }
 
-    const decryptedPassword = decryptVigenere({text: usuario.contrasena, key: VIGENERE_KEY});
-    if (decryptedPassword !== contrasena) {
-      return res.status(401).json({ mensaje: "Credenciales inválidas" });
-    }
+    const hash = usuario.contrasena
+    const isValid = await bcrypt.compare(contrasena, hash)
 
-    return res.status(200).json({ mensaje: "Inicio de sesión exitoso", usuario });
+    if (isValid) {
+      res.json({ success: true, message: 'Inicio de sesión exitoso', usuario});
+    } else {
+      res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
+    }
   } catch (error) {
     return res.status(500).json({ mensaje: "Error interno del servidor" });
   }
@@ -60,8 +60,10 @@ app.post('/register', async (req, res) => {
       return res.status(401).json({ mensaje: "Este correo electrónico ya está registrado"});
     }
 
-    const encryptedPassword = encryptVigenere({text: contrasena, key: VIGENERE_KEY});
-    const datos = new Usuarios({ nombre, apellido_paterno, apellido_materno, correo_electronico, contrasena: encryptedPassword, rol });
+    const saltRounds = process.env.SALT_ROUND;
+    const hash = await bcrypt.hash(contrasena, saltRounds)
+
+    const datos = new Usuarios({ nombre, apellido_paterno, apellido_materno, correo_electronico, contrasena: hash, rol });
     await datos.save();
 
     res.status(200).json({ mensaje: 'Registro guardado'});
@@ -206,13 +208,14 @@ app.post('/updatePass', async (req, res) => {
   const { correo_electronico, contrasena } = req.body
 
   try {
+    const saltRounds = process.env.SALT_ROUND
+    const hash = await bcrypt.hash(contrasena, saltRounds)
     Usuarios.findOne({ correo_electronico })
     .then ((correoExistente) => {
       if (!correoExistente) {
         return res.status(401).json({ mensaje: "Este correo electrónico no está registrado"});
       } else {
-        const encryptedPassword = encryptVigenere({text: contrasena, key: VIGENERE_KEY})
-        const pass = Usuarios.updateOne({ correo_electronico }, { contrasena: encryptedPassword })
+        const pass = Usuarios.updateOne({ correo_electronico }, { contrasena: hash })
         .then ((pass) => {
           res.status(200).json({ mensaje: 'Contraseña actualizada'})
         })
@@ -230,8 +233,9 @@ app.post('/updatePass', async (req, res) => {
 app.post('/updatePassAdmin', async (req, res) => {
   const { contrasena } = req.body; 
   try {
-    const encryptedPassword = encryptVigenere({text: contrasena, key: VIGENERE_KEY})
-    const updatedUser = await Usuarios.findByIdAndUpdate(req.body.id, { contrasena: encryptedPassword }, { new: true });
+    const saltRounds = process.env.SALT_ROUND
+    const hash = await bcrypt.hash(contrasena, saltRounds)
+    const updatedUser = await Usuarios.findByIdAndUpdate(req.body.id, { contrasena: hash }, { new: true });
 
     if (!updatedUser) {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
@@ -247,13 +251,14 @@ app.post('/updateUser', async (req, res) => {
   const { nombre, apellido_paterno, apellido_materno, correo_electronico, contrasena } = req.body;
 
   try {
-    const encryptedPassword = encryptVigenere({text: contrasena, key: VIGENERE_KEY})
+    const saltRounds = 10
+    const hash = await bcrypt.hash(contrasena, saltRounds)
     Usuarios.findByIdAndUpdate(req.body.id, {
       nombre,
       apellido_paterno,
       apellido_materno,
       correo_electronico,
-      contrasena: encryptedPassword
+      contrasena: hash
     })
     .then ((data) => {
       res.status(200).json({ mensaje: 'Datos actualizados' })
@@ -382,17 +387,17 @@ app.post('/send-mail', async (req, res) => {
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
-    host: 'smtp.gmail.com',
-    port: 465,
+    host: process.env.HOST_GMAIL,
+    port: process.env.PORT_GMAIL,
     secure: true,
     auth: {
-      user: 'agroboost.ii@gmail.com',
-      pass: 'pgxxuthhazzvdtkj',
+      user: process.env.USER_GMAIL,
+      pass: process.env.PASS_GMAIL,
     },
   });
 
   const info = await transporter.sendMail({
-    from: "agroboost.ii@gmail.com",
+    from: process.env.USER_GMAIL,
     to: correo_electronico,
     subject: 'Restablecimiento de contraseña - AgroBoost',
     html: contentHTML
@@ -431,17 +436,17 @@ app.post('/resend-code', async (req, res) => {
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
-    host: 'smtp.gmail.com',
-    port: 465,
+    host: process.env.HOST_GMAIL,
+    port: process.env.PORT_GMAIL,
     secure: true,
     auth: {
-      user: 'agroboost.ii@gmail.com',
-      pass: 'pgxxuthhazzvdtkj',
+      user: process.env.USER_GMAIL,
+      pass: process.env.PASS_GMAIL,
     },
   });
 
   const info = await transporter.sendMail({
-    from: "agroboost.ii@gmail.com",
+    from: process.env.USER_GMAIL,
     to: correo_electronico,
     subject: 'Restablecimiento de contraseña - AgroBoost',
     html: contentHTML
