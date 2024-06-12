@@ -1,3 +1,4 @@
+// Importar dependencias y Schemas
 import express from 'express'
 import mongoose from 'mongoose'
 const nodemailer = require('nodemailer');
@@ -14,13 +15,16 @@ import { exec } from 'child_process';
 const bcrypt = require('bcrypt')
 require('dotenv').config()
 
+// Configuración inicial
 const app = express()
 const port = process.env.SERVER_PORT
 
+// Configuracion de middleware
 app.use(express.json());
 app.use(bodyParser.json())
 app.use(cors());
 
+// Conexión a la base de datos
 const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017"
 
 mongoose.connect(mongoURI).then(() => {
@@ -29,6 +33,7 @@ mongoose.connect(mongoURI).then(() => {
   console.log("Error:", err);
 });
 
+// Ruta para autenticar usuarios
 app.post('/login', async (req, res) => {
   const { correo_electronico, contrasena } = req.body;
 
@@ -51,6 +56,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Registrar nuevos usuarios
 app.post('/register', async (req, res) => {
   const { nombre, apellido_paterno, apellido_materno, correo_electronico, contrasena, rol } = req.body;
 
@@ -72,6 +78,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
+// Obtener una lista de los usuarios registrados
 app.get('/users', async (req, res) => {
   try {
     const users = await Usuarios.find();
@@ -81,7 +88,7 @@ app.get('/users', async (req, res) => {
   }
 });
 
-
+// Obtener detalles de un usuario en específico
 app.get('/user/:userId', async (req, res) => {
   const userId = req.params.userId;
 
@@ -97,6 +104,7 @@ app.get('/user/:userId', async (req, res) => {
   }
 });
 
+// Obtener una lista de los cultivos registrados
 app.get('/cultivos', async (req, res) => {
   try {
     const cultivosDetalles = await Cultivo.aggregate([
@@ -117,6 +125,7 @@ app.get('/cultivos', async (req, res) => {
   }
 });
 
+// Obtener una lista de los cultivos de un usuario en específico
 app.get('/cultivos/:userId', async (req, res) => {
   const userId = req.params.userId
   try {
@@ -128,6 +137,7 @@ app.get('/cultivos/:userId', async (req, res) => {
   }
 })
 
+// Obtener una lista de los dispositivos de un usuario en específico
 app.get('/dispositivo/:userId', async (req, res) => {
   const userId = req.params.userId;
   try {
@@ -139,6 +149,7 @@ app.get('/dispositivo/:userId', async (req, res) => {
   }
 });
 
+// Obtener una lista de los recordatorios de un usuario en específico
 app.get('/recordatorio/:userId', async (req, res) => {
   const userId = req.params.userId; // Obtén el ID del usuario de los parámetros de la URL
 
@@ -151,6 +162,7 @@ app.get('/recordatorio/:userId', async (req, res) => {
   }
 });
 
+// Actualizar un recordatorio
 app.put('/recordatorio/:id', async (req, res) => {
   const id = req.params.id;
   const { activo } = req.body;
@@ -168,12 +180,14 @@ app.put('/recordatorio/:id', async (req, res) => {
   }
 });
 
+// Obtener una lista de los productos registrados
 app.get('/productos', async(req, res) => {
   Producto.find()
   .then(data => res.json(data))
   .catch(err => res.json(err));
 })
 
+// Obtener una lista de las ventas
 app.get('/ventas', async (req, res) => {
   try {
     const ventasDetalles = await Ventas.aggregate([
@@ -203,7 +217,7 @@ app.get('/ventas', async (req, res) => {
   }
 });
 
-
+// Actualizar la contraseña de un usuario
 app.post('/updatePass', async (req, res) => {
   const { correo_electronico, contrasena } = req.body
 
@@ -230,6 +244,7 @@ app.post('/updatePass', async (req, res) => {
   }
 })
 
+// Actualizar la contraseña de un administrador
 app.post('/updatePassAdmin', async (req, res) => {
   const { contrasena } = req.body; 
   try {
@@ -246,7 +261,7 @@ app.post('/updatePassAdmin', async (req, res) => {
   }
 });
 
-
+// Actualizar los datos de un usuario
 app.post('/updateUser', async (req, res) => {
   const { nombre, apellido_paterno, apellido_materno, correo_electronico, contrasena } = req.body;
 
@@ -271,6 +286,7 @@ app.post('/updateUser', async (req, res) => {
   }
 })
 
+// Actualizar los datos de un producto
 app.post('/updateProduct', async (req, res) => {
   const { nombre_producto, precio, stock } = req.body;
 
@@ -291,6 +307,7 @@ app.post('/updateProduct', async (req, res) => {
   }
 })
 
+// Eliminar a un usuario
 app.post('/deleteUser', async (req, res) => {
   try {
     await Ventas.deleteMany({id_usuario: req.body.id})
@@ -307,6 +324,7 @@ app.post('/deleteUser', async (req, res) => {
   }
 })
 
+// Eliminar un producto
 app.post('/deleteProduct', async (req, res) => {
   try {
     Producto.findByIdAndDelete(req.body.id)
@@ -321,6 +339,7 @@ app.post('/deleteProduct', async (req, res) => {
   }
 })
 
+// Obtener una lista de las colecciones en la base de datos
 app.get('/collections', async (req, res) => {
   try {
     const collections = await mongoose.connection.db.listCollections().toArray();
@@ -332,6 +351,7 @@ app.get('/collections', async (req, res) => {
   }
 });
 
+// Realizar una copia de seguridad de la base de datos
 app.post('/backup', async (req, res) => {
   const { collections, frecuencia } = req.body;
 
@@ -364,11 +384,13 @@ interface VerificationCodes {
 
 const verificationCodes: VerificationCodes = {};
 
+// Generación de códigos de verificación
 const generateVerificationCode = () => {
   const code = Math.floor(1000 + Math.random() * 9000);
   return code.toString().padStart(4, '0');
 };
 
+// Enviar un correo electrónico a un usuario
 app.post('/send-mail', async (req, res) => {
   const { correo_electronico } = req.body;
 
@@ -406,6 +428,7 @@ app.post('/send-mail', async (req, res) => {
   res.send("Correo enviado");
 });
 
+// Verificar un código de verificación
 app.post('/verifyCode', (req, res) => {
   const { correo_electronico, code } = req.body;
 
