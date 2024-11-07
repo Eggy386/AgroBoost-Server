@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node dist/index.ts",
+    "dev": "node src/index.ts",
     "start": "tnode src/index.ts",
     "test": "jest"
   },
