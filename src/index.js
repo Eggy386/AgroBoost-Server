@@ -15,7 +15,7 @@ const Ventas = require('./schemas/Ventas');
 const Agroquimico = require('./schemas/Agroquimico')
 const Notificaciones = require('./schemas/Notificaciones')
 const Producto = require('./schemas/Producto')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 require('dotenv').config()
 const path = require('path');
 const fs = require('fs');
