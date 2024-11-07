@@ -6,15 +6,15 @@ const { v4: uuidv4 } = require('uuid');
 import bodyParser from 'body-parser'
 import cors from 'cors';
 import { exec } from 'child_process';
-import Usuarios from './schemas/Usuarios';
-import Cultivo from './schemas/Cultivo';
-import Dispositivo from './schemas/Dispositivo';
-import Recordatorio from './schemas/Recordatorio';
-import Riego from './schemas/Riego';
-import Ventas from './schemas/Ventas';
-import Agroquimico from './schemas/Agroquimico'
-import Notificaciones from './schemas/Notificaciones'
-import Producto from './schemas/Producto'
+import Usuarios from './src/schemas/Usuarios';
+import Cultivo from './src/schemas/Cultivo';
+import Dispositivo from './src/schemas/Dispositivo';
+import Recordatorio from './src/schemas/Recordatorio';
+import Riego from './src/schemas/Riego';
+import Ventas from './src/schemas/Ventas';
+import Agroquimico from './src/schemas/Agroquimico'
+import Notificaciones from './src/schemas/Notificaciones'
+import Producto from './src/schemas/Producto'
 const bcrypt = require('bcrypt')
 require('dotenv').config()
 const path = require('path');
