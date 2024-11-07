@@ -20,7 +20,7 @@ const fs = require('fs');
 
 // Configuración inicial
 const app = express()
-const port = process.env.SERVER_PORT
+const port = process.env.SERVER_PORT || 3000
 
 // Configuracion de middleware
 app.use(express.json());
