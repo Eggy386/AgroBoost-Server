@@ -499,10 +499,10 @@ app.get('/collections', async (req, res) => {
 app.post('/backup', async (req, res) => {
   const { collections, frecuencia } = req.body;
 
-  const dumpPromises = collections.map((collection: string) => {
+  const dumpPromises = collections.map((collection) => {
     const command = `mongodump --uri ${mongoURI} --collection ${collection} --out C:/Users/alvar/OneDrive/Documentos/GitHub/agroboost/src/Backup/`;
 
-    return new Promise<void>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       exec(command, (error, stdout, stderr) => {
         if (error) {
           reject(error);
@@ -522,11 +522,7 @@ app.post('/backup', async (req, res) => {
   }
 });
 
-interface VerificationCodes {
-  [key: string]: string;
-}
-
-const verificationCodes: VerificationCodes = {};
+const verificationCodes = {};
 
 // Generación de códigos de verificación
 const generateVerificationCode = () => {
