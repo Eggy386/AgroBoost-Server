@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev src/index.ts",
+    "dev": "ts-node src/index.ts",
+    "start": "ts-node src/index.ts",
     "test": "jest"
   },
   "jest": {
@@ -49,6 +50,7 @@
     "mongoose": "^8.2.1",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.13",
+    "ts-node": "^10.9.2",
     "uuid": "^9.0.1"
   }
 }
