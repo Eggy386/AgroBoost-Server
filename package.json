@@ -1,12 +1,11 @@
 {
-  "type": "module",
   "name": "servidor",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
     "dev": "node src/index.js",
-    "start": "node src/index.ts",
+    "start": "node src/index.js",
     "test": "jest"
   },
   "jest": {

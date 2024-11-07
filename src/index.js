@@ -1,20 +1,20 @@
 // Importar dependencias y Schemas
-import express from 'express'
-import mongoose from 'mongoose'
+const express = require('express')
+const mongoose = require('mongoose')
 const nodemailer = require('nodemailer');
 const { v4: uuidv4 } = require('uuid');
-import bodyParser from 'body-parser'
-import cors from 'cors';
-import { exec } from 'child_process';
-import Usuarios from './schemas/Usuarios';
-import Cultivo from './schemas/Cultivo';
-import Dispositivo from './schemas/Dispositivo';
-import Recordatorio from './schemas/Recordatorio';
-import Riego from './schemas/Riego';
-import Ventas from './schemas/Ventas';
-import Agroquimico from './schemas/Agroquimico'
-import Notificaciones from './schemas/Notificaciones'
-import Producto from './schemas/Producto'
+const bodyParser = require('body-parser')
+const cors = require('cors');
+const exec = require('child_process');
+const Usuarios = require('./schemas/Usuarios');
+const Cultivo = require('./schemas/Cultivo');
+const Dispositivo = require('./schemas/Dispositivo');
+const Recordatorio = require('./schemas/Recordatorio');
+const Riego = require('./schemas/Riego');
+const Ventas = require('./schemas/Ventas');
+const Agroquimico = require('./schemas/Agroquimico')
+const Notificaciones = require('./schemas/Notificaciones')
+const Producto = require('./schemas/Producto')
 const bcrypt = require('bcrypt')
 require('dotenv').config()
 const path = require('path');

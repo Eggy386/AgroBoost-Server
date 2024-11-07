@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const UsuariosSchema = new Schema({
@@ -20,4 +20,4 @@ const UsuariosSchema = new Schema({
   imagen_perfil: { type: String }
 }, { collection: 'Usuarios' });
 
-export default mongoose.model("Usuarios", UsuariosSchema);
+module.exports = mongoose.model("Usuarios", UsuariosSchema);

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require('mongoose');
 const { Schema } = mongoose
 
 const Dispositivo = new Schema({
@@ -8,4 +8,4 @@ const Dispositivo = new Schema({
     datos: { type: Schema.Types.Mixed, required: true }
 }, { collection: "Dispositivo" })
 
-export default mongoose.model("Dispositivo", Dispositivo)
+module.exports = mongoose.model("Dispositivo", Dispositivo)

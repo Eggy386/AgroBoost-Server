@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require('mongoose');
 const { Schema } = mongoose
 
 const Cultivo = new Schema({
@@ -16,4 +16,4 @@ const Cultivo = new Schema({
     id_usuario: { type: Schema.Types.ObjectId, ref: 'Usuario' }
 }, { collection: "Cultivo" })
 
-export default mongoose.model("Cultivo", Cultivo)
+module.exports = mongoose.model("Cultivo", Cultivo)

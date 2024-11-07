@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require('mongoose');
 const { Schema } = mongoose
 
 const Ventas = new Schema({
@@ -8,4 +8,4 @@ const Ventas = new Schema({
     estado_venta: { type: String, required: true }
 }, { collection: 'Ventas'})
 
-export default mongoose.model("Ventas", Ventas)
+module.exports = mongoose.model("Ventas", Ventas)

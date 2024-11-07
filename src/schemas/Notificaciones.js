@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require('mongoose');
 const { Schema } = mongoose
 
 const Notificaciones = new Schema({
@@ -7,4 +7,4 @@ const Notificaciones = new Schema({
     programar_notificacion: { type: Date, required: true }
 }, { collection: "Notificaciones" })
 
-export default mongoose.model("Notificaciones", Notificaciones)
+module.exports = mongoose.model("Notificaciones", Notificaciones)

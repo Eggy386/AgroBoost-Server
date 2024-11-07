@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const Recordatorio = new Schema({
@@ -9,4 +9,4 @@ const Recordatorio = new Schema({
     activo: { type: Boolean, require: true }
 }, { collection: "Recordatorio" })
 
-export default mongoose.model("Recordatorio", Recordatorio)
+module.exports = mongoose.model("Recordatorio", Recordatorio)

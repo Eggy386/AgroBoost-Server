@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require('mongoose');
 const { Schema } = mongoose
 
 const Riego = new Schema({
@@ -8,4 +8,4 @@ const Riego = new Schema({
     activo: { type: Boolean, require: true }
 }, { collection: "Riego" })
 
-export default mongoose.model("Riego", Riego)
+module.exports = mongoose.model("Riego", Riego)
