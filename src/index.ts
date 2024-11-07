@@ -12,8 +12,11 @@ import Ventas from './schemas/Ventas';
 import Dispositivo from './schemas/Dispositivo'
 import Recordatorio from './schemas/Recordatorio'
 import { exec } from 'child_process';
+import Riego from './schemas/Riego';
 const bcrypt = require('bcrypt')
 require('dotenv').config()
+const path = require('path');
+const fs = require('fs');
 
 // Configuración inicial
 const app = express()
@@ -23,6 +26,11 @@ const port = process.env.SERVER_PORT
 app.use(express.json());
 app.use(bodyParser.json())
 app.use(cors());
+// Define la ruta completa hacia la carpeta 'uploads'
+const uploadsPath = path.join(__dirname, 'uploads');
+
+// Servir la carpeta 'uploads' como estática
+app.use('/uploads', express.static(uploadsPath));
 
 // Conexión a la base de datos
 const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017"
@@ -66,13 +74,13 @@ app.post('/register', async (req, res) => {
       return res.status(401).json({ mensaje: "Este correo electrónico ya está registrado"});
     }
 
-    const saltRounds = process.env.SALT_ROUND;
+    const saltRounds = 10;
     const hash = await bcrypt.hash(contrasena, saltRounds)
 
     const datos = new Usuarios({ nombre, apellido_paterno, apellido_materno, correo_electronico, contrasena: hash, rol });
     await datos.save();
 
-    res.status(200).json({ mensaje: 'Registro guardado'});
+    res.status(200).json({ success: true, mensaje: 'Registro guardado'});
   } catch (error) {
     return res.status(500).json({ mensaje: "Error interno del servidor"})
   }
@@ -103,6 +111,46 @@ app.get('/user/:userId', async (req, res) => {
     res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
 });
+
+app.post('/registerCultivo', async (req, res) => {
+  console.log(req.body)
+  const {
+    tipo_cultivo, 
+    fecha_siembra,
+    tipo_riego, 
+    programa_riego, 
+    metodo_fertilizacion, 
+    fechas_fertilizacion, 
+    cantidad_fertilizante, 
+    control_plagas, 
+    tecnica_polinizacion, 
+    medidas_siembra, 
+    fecha_prevista, 
+    id_usuario
+  } = req.body
+
+  try {
+    const newCultivo = new Cultivo({
+      tipo_cultivo,
+      fecha_siembra,
+      tipo_riego,
+      programa_riego,
+      metodo_fertilizacion,
+      fechas_fertilizacion,
+      cantidad_fertilizante,
+      control_plagas,
+      tecnica_polinizacion,
+      medidas_siembra,
+      fecha_prevista,
+      id_usuario
+    })
+
+    await newCultivo.save()
+    res.status(201).json({ success: true, message: 'Cultivo Registrado exitosamente', cultivo: newCultivo })
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al registrar el cultivo', error });
+  }
+})
 
 // Obtener una lista de los cultivos registrados
 app.get('/cultivos', async (req, res) => {
@@ -162,6 +210,26 @@ app.get('/recordatorio/:userId', async (req, res) => {
   }
 });
 
+app.post('/recordatorio', async (req,res) => {
+  const { id_usuario, nombre_recordatorio, hora_recordatorio, dias_recordatorio, activo } = req.body;
+
+    try {
+        const newRecordatorio = new Recordatorio({
+            nombre_recordatorio,
+            hora_recordatorio,
+            dias_recordatorio,
+            id_usuario,
+            activo
+        });
+
+        await newRecordatorio.save();
+
+        res.status(201).json({ message: 'Recordatorio creado con éxito', recordatorio: newRecordatorio });
+    } catch (error) {
+        res.status(500).json({ message: 'Error al crear el recordatorio', error });
+    }
+})
+
 // Actualizar un recordatorio
 app.put('/recordatorio/:id', async (req, res) => {
   const id = req.params.id;
@@ -177,6 +245,56 @@ app.put('/recordatorio/:id', async (req, res) => {
   } catch (error) {
       console.error('Error al actualizar el recordatorio:', error);
       res.status(500).json({ error: 'Error al actualizar el recordatorio' });
+  }
+});
+
+// Obtener una lista de los recordatorios de un usuario en específico
+app.get('/riegos/:userId', async (req, res) => {
+  const userId = req.params.userId; // Obtén el ID del usuario de los parámetros de la URL
+
+  try {
+    const riegoDetalles = await Riego.find({id_usuario: userId})
+    res.json(riegoDetalles);
+  } catch (error) {
+    console.error('Error al obtener los detalles del riego:', error);
+    res.status(500).json({ message: 'Error al obtener los detalles del riego' });
+  }
+});
+
+app.post('/riegos', async (req,res) => {
+  const { id_usuario, hora_riego, dias_riego, activo } = req.body;
+
+    try {
+        const newRiego = new Riego({
+            hora_riego,
+            dias_riego,
+            id_usuario,
+            activo
+        });
+
+        await newRiego.save();
+
+        res.status(201).json({ message: 'Riego creado con éxito', riego: newRiego });
+    } catch (error) {
+        res.status(500).json({ message: 'Error al crear el riego', error });
+    }
+})
+
+// Actualizar un recordatorio
+app.put('/riegos/:id', async (req, res) => {
+  const id = req.params.id;
+  const { activo } = req.body;
+
+  try {
+      const upateRiego = await Riego.findByIdAndUpdate(id, { activo }, { new: true });
+
+      if (!upateRiego) {
+          return res.status(404).json({ error: 'Riego no encontrado' });
+      }
+      res.json(upateRiego);
+  } catch (error) {
+      console.error('Error al actualizar el riego:', error);
+      res.status(500).json({ error: 'Error al actualizar el riego' });
   }
 });
 
@@ -222,7 +340,7 @@ app.post('/updatePass', async (req, res) => {
   const { correo_electronico, contrasena } = req.body
 
   try {
-    const saltRounds = process.env.SALT_ROUND
+    const saltRounds = 10
     const hash = await bcrypt.hash(contrasena, saltRounds)
     Usuarios.findOne({ correo_electronico })
     .then ((correoExistente) => {
@@ -263,28 +381,54 @@ app.post('/updatePassAdmin', async (req, res) => {
 
 // Actualizar los datos de un usuario
 app.post('/updateUser', async (req, res) => {
-  const { nombre, apellido_paterno, apellido_materno, correo_electronico, contrasena } = req.body;
+  const { nombre, apellido_paterno, apellido_materno} = req.body;
 
   try {
-    const saltRounds = 10
-    const hash = await bcrypt.hash(contrasena, saltRounds)
     Usuarios.findByIdAndUpdate(req.body.id, {
       nombre,
       apellido_paterno,
-      apellido_materno,
-      correo_electronico,
-      contrasena: hash
+      apellido_materno
     })
     .then ((data) => {
-      res.status(200).json({ mensaje: 'Datos actualizados' })
+      res.status(200).json({success: true, mensaje: 'Datos actualizados' })
     })
     .catch ((error) => {
-      res.status(500).json({ mensaje: 'Error al actualizar los datos' })
+      res.status(500).json({success: false, mensaje: 'Error al actualizar los datos' })
     })
   } catch (error) {
-    return res.status(500).json({ mensaje: 'Error interno del servidor' })
+    return res.status(500).json({success: false, mensaje: 'Error interno del servidor' })
   }
 })
+
+app.post('/uploadProfileImage', async (req, res) => {
+  const { id_usuario, image } = req.body;
+
+  try {
+      // Decodificar la imagen base64
+      const buffer = Buffer.from(image, 'base64');
+      
+      // Definir la ruta relativa para guardar la imagen
+      const relativeImagePath = `/uploads/${id_usuario}.jpg`;
+      const imagePath = path.join(__dirname, relativeImagePath);
+
+      // Guardar la imagen en el servidor
+      fs.writeFileSync(imagePath, buffer);
+
+      // Construir la URL completa de la imagen
+      const imageUrl = `${req.protocol}://${req.get('host')}${relativeImagePath}`;
+
+      console.log(imageUrl)
+
+      // Actualizar al usuario con la ruta relativa de la imagen
+      const user = await Usuarios.findByIdAndUpdate(id_usuario, { imagen_perfil: imageUrl });
+
+      // Responder con éxito y la URL de la imagen
+      res.status(200).json({ success: true, message: 'Imagen de perfil subida correctamente', user });
+  } catch (error) {
+      console.error('Error al subir la imagen', error);
+      res.status(500).json({ success: false, message: 'Error interno al subir la imagen' });
+  }
+});
 
 // Actualizar los datos de un producto
 app.post('/updateProduct', async (req, res) => {
@@ -393,9 +537,9 @@ const generateVerificationCode = () => {
 // Enviar un correo electrónico a un usuario
 app.post('/send-mail', async (req, res) => {
   const { correo_electronico } = req.body;
+  console.log('Solicitud recibida para:', correo_electronico);
 
   const verificationCode = generateVerificationCode();
-
   verificationCodes[correo_electronico] = verificationCode;
 
   const contentHTML = `
@@ -404,7 +548,7 @@ app.post('/send-mail', async (req, res) => {
     <p>Por favor, utiliza el siguiente código para restablecer tu contraseña:</p>
     <p><strong>${verificationCode}</strong></p>
     <p>Si no has solicitado este cambio, puedes ignorar este correo.</p>
-    <p>Atentamente,<br>Equipo Patitas</p>
+    <p>Atentamente,<br>AgroBoost</p>
   `;
 
   const transporter = nodemailer.createTransport({
@@ -418,15 +562,21 @@ app.post('/send-mail', async (req, res) => {
     },
   });
 
-  const info = await transporter.sendMail({
-    from: process.env.USER_GMAIL,
-    to: correo_electronico,
-    subject: 'Restablecimiento de contraseña - AgroBoost',
-    html: contentHTML
-  });
-
-  res.send("Correo enviado");
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.USER_GMAIL,
+      to: correo_electronico,
+      subject: 'Restablecimiento de contraseña - AgroBoost',
+      html: contentHTML
+    });
+    console.log('Correo enviado:', info);
+    res.status(200).json({ mensaje: "Correo enviado" });
+  } catch (error) {
+    console.error('Error al enviar correo:', error);
+    return res.status(500).json({ mensaje: "Error interno del servidor" });
+  }
 });
+
 
 // Verificar un código de verificación
 app.post('/verifyCode', (req, res) => {
@@ -434,9 +584,9 @@ app.post('/verifyCode', (req, res) => {
 
   if (verificationCodes[correo_electronico] === code) {
     delete verificationCodes[correo_electronico];
-    res.status(200).send('Código de verificación válido');
+    res.status(200).json({mensaje:"Código de verificación válido"});
   } else {
-    res.status(400).send('Código de verificación inválido');
+    res.status(400).json({mensaje:'Código de verificación inválido'});
   }
 });
 

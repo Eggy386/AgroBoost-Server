@@ -16,7 +16,8 @@ const UsuariosSchema = new Schema({
     estado: String,
     ciudad: String,
     codigo_postal: Number
-  }
+  },
+  imagen_perfil: { type: String }
 }, { collection: 'Usuarios' });
 
 export default mongoose.model("Usuarios", UsuariosSchema);
