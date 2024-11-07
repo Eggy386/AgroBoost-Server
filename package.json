@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node src/index.ts",
-    "start": "ts-node src/index.ts",
+    "dev": "node dist/index.ts",
+    "start": "tnode src/index.ts",
     "test": "jest"
   },
   "jest": {
