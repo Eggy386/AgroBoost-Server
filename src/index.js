@@ -19,6 +19,8 @@ const bcrypt = require('bcryptjs')
 require('dotenv').config()
 const path = require('path');
 const fs = require('fs');
+const Subscription = require('./schemas/Subscription');
+const {sendPush} = require  
 
 // Configuración inicial
 const app = express()
@@ -624,6 +626,67 @@ app.post('/resend-code', async (req, res) => {
   });
 
   res.send("Correo enviado");
+});
+
+app.post('/suscription', async (req, res) => {
+  const { userId, endpoint, keys, expirationTime } = req.body;
+
+  try {
+    // Verificar si ya existe una suscripción con el mismo `userId` y `endpoint`
+    const existingSubscription = await Subscription.findOne({ userId, endpoint });
+
+    if (existingSubscription) {
+      return res.status(200).json({ message: 'El usuario ya está suscrito con este endpoint' });
+    }
+
+    // Crear una nueva suscripción
+    const newSubscription = new Subscription({
+      userId,
+      endpoint,
+      expirationTime: expirationTime || null,
+      keys,
+    });
+
+    await newSubscription.save();
+    res.status(200).json({ message: 'Suscripción añadida exitosamente' });
+  } catch (error) {
+    console.error("Error al guardar la suscripción:", error);
+    res.status(400).json({ error: 'Error al agregar la nueva suscripción' });
+  }
+});
+
+app.post('/sendNotification', async (req, res) => {
+  const { userId, message } = req.body;
+
+  try {
+    // Buscar la suscripción del usuario
+    const subscription = await Suscription.findOne({ userId });
+    if (!subscription) {
+      return res.status(404).json({ error: 'No subscription found for the specified userId.' });
+    }
+
+    // Verificar si las claves existen
+    if (!subscription.keys || !subscription.keys.p256dh || !subscription.keys.auth) {
+      return res.status(400).json({ error: 'Invalid subscription keys.' });
+    }
+
+    // Formatear la suscripción para cumplir con el tipo PushSubscription
+    const pushSubscription = {
+      endpoint: subscription.endpoint,
+      expirationTime: subscription.expirationTime ? subscription.expirationTime.getTime() : null, // Convertir Date a número
+      keys: {
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+      },
+    };
+
+    // Enviar notificación push
+    await sendPush(pushSubscription, message);
+    res.status(200).json({ message: 'Push notification sent successfully.' });
+  } catch (error) {
+    console.error('Error sending push notification:', error);
+    res.status(500).json({ error: 'Failed to send push notification.' });
+  }
 });
 
 
