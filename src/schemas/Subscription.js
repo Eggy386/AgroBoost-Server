@@ -3,7 +3,7 @@ const {Schema} = mongoose;
 
 const SubscriptionSchema = new Schema(
     {
-      id_usuario: { 
+      userId: { 
         type: Schema.Types.ObjectId, ref: "Usuarios", required: true
       },
       endpoint: { 

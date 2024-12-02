@@ -20,7 +20,7 @@ require('dotenv').config()
 const path = require('path');
 const fs = require('fs');
 const Subscription = require('./schemas/Subscription');
-const {sendPush} = require  
+const {sendPush} = require('./pushServer');
 
 // Configuración inicial
 const app = express()
@@ -660,7 +660,7 @@ app.post('/sendNotification', async (req, res) => {
 
   try {
     // Buscar la suscripción del usuario
-    const subscription = await Suscription.findOne({ userId });
+    const subscription = await Subscription.findOne({ userId });
     if (!subscription) {
       return res.status(404).json({ error: 'No subscription found for the specified userId.' });
     }

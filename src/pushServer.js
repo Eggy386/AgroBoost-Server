@@ -11,7 +11,7 @@ webpush.setVapidDetails(
 // Función para enviar notificaciones push
 function sendPush(pushSubscription, message) {
   const payload = JSON.stringify({
-    title: 'Contraseña Guardada',
+    title: 'Agroboost',
     body: message,
   });
 
